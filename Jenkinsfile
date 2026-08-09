@@ -26,30 +26,29 @@ pipeline {
                 checkout scm
             }
         }
-    }
-
-    stage('Maven Build') {
-        steps {
-            // 테스트는 건너뛰고 Maven 빌드
-            sh 'mvn clean package -DskipTests'
+        stage('Maven Build') {
+            steps {
+                // 테스트는 건너뛰고 Maven 빌드
+                sh 'mvn clean package -DskipTests'
+            }
         }
-    }
 
-    stage('Prepare Jar') {
-        steps {
-            // 빌드 결과물을 app.jar라는 고정 이름으로 복사
-            sh 'cp target/demo-0.0.1-SNAPSHOT.jar ${JAR_FILE_NAME}'
+        stage('Prepare Jar') {
+            steps {
+                // 빌드 결과물을 app.jar라는 고정 이름으로 복사
+                sh 'cp target/demo-0.0.1-SNAPSHOT.jar ${JAR_FILE_NAME}'
+            }
         }
-    }
 
-    stage('Copy to Remote Server') {
-        steps {
-            // 원격 명령 실행
-            sshagent (credentials: [env.SSH_CREDENTIALS_ID]) {
-                // 배포 디렉토리 생성 (없으면)
-                sh "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${REMOTE_USER}@${REMOTE_HOST} \"mkdir -p ${REMOTE_DIR}\""
-                // Jar와 Dockerfile을 원격 서버로 복사
-                sh "scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${JAR_FILE_NAME} Dockerfile ${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_DIR}/"
+        stage('Copy to Remote Server') {
+            steps {
+                // 원격 명령 실행
+                sshagent (credentials: [env.SSH_CREDENTIALS_ID]) {
+                    // 배포 디렉토리 생성 (없으면)
+                    sh "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${REMOTE_USER}@${REMOTE_HOST} \"mkdir -p ${REMOTE_DIR}\""
+                    // Jar와 Dockerfile을 원격 서버로 복사
+                    sh "scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${JAR_FILE_NAME} Dockerfile ${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_DIR}/"
+                }
             }
         }
     }
